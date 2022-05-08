@@ -1,2 +1,3 @@
-dist/
+**/dist/*bundle*
+*.ttf
 node_modules/
