@@ -12,19 +12,68 @@ self.MonacoEnvironment = {
     }
 }
 
-// a = 0
-// a = b => 0
-// a == 0
-// a === 0
-// a + 0
-// a / 0
-// a ** 0
-// a , 0
-// function a(x, y){
-//     const result = x + y + 2 * 3;
-//     if(result == null) return
-//     return result
-// }
+var registeredLanguages = new Set()
+
+async function changeLanguageTo(languageId){
+    if(!registeredLanguages.has(languageId)) registerLanguage(languageId)
+    monaco.editor.setModelLanguage(editor.getModel(), languageId)
+}
+
+window.changeLanguageTo = changeLanguageTo
+
+async function registerLanguage(languageId){
+    let pathToGrammarFile = getPathToGrammarFile(getScopeFromId(languageId))
+    let map = new Map()
+    map.set(languageId, getScopeFromId(languageId))
+    
+    let registry = new Registry({
+        getGrammarDefinition: async (scopeName) => {
+            return {
+                format: "json",
+                content: await (await fetch(getPathToGrammarFile(scopeName))).text()
+            }
+        }
+    })
+    await wireTmGrammars(monaco, registry, map, editor)
+
+    await registerSnippets(languageId)
+    registeredLanguages.add(languageId)
+}
+
+async function registerSnippets(languageId){
+    let languages = new Set(["husk"])
+    if(!languages.has(languageId)) return
+    const snippets = await (await fetch("./assets/snippets/" + languageId + ".json")).json()      
+    monaco.languages.registerCompletionItemProvider(languageId, {
+        provideCompletionItems: () => {
+            return {
+                suggestions: Object.entries(snippets).flatMap(([name, {prefix, body}]) => {
+                    prefix = Array.isArray(prefix) ? prefix : [prefix]
+                    body = Array.isArray(body) ? body.join("\n") : body
+                    return prefix.map(one_prefix => {
+                        return {
+                            label: one_prefix.trim(),
+                            insertText: body,
+                            kind: monaco.languages.CompletionItemKind.Snippet
+                        }
+                    })
+                })
+            }
+        }}
+    )
+}
+
+window.registerLanguage = registerLanguage
+window.registeredLanguages = registeredLanguages
+
+
+const getScopeFromId = id => {
+    return {
+        "javascript": "source.js",
+        "husk": "source.husk",
+        "ruby": "source.ruby",
+    }[id] ?? "source.txt"
+}
 
 const getPathToGrammarFile = scopeName => {
     console.log(scopeName)
@@ -32,7 +81,7 @@ const getPathToGrammarFile = scopeName => {
         "source.js": "./assets/syntaxes/js.tm.json",
         "source.txt": "./assets/syntaxes/plaintext.tm.json",
         "source.husk": "./assets/syntaxes/husk.json",
-        "source.ruby": "./assets/syntaxes/ruby.jsonc",
+        "source.ruby": "./assets/syntaxes/ruby.jsonc"
     }
     const result = languages[scopeName]
     if(result) return result
@@ -80,7 +129,9 @@ async function liftOff() {
         value:
 `function a(x, y){
     const result = x + y + 2 * 3;
+    let fun = id => id <= id
     if(result == null) return
+    console.log(\`let a = \${x + y + 3 == 4 ? 5 : 6}\`)
     return result
 }
 `,
