@@ -1,7 +1,15 @@
 #container {
     /* width: 50%; */
-    min-height: 500px;
+    /* min-height: 500px; */
+    height: 400px;
 }
 body {
     margin: 0px;
+    background-color: #333;
+    /* background-color: #1e1e1e; */
+}
+#middle {
+    margin-left: 25px;
+    margin-right: 25px;
+    margin-top: 150px;
 }

@@ -72,6 +72,7 @@ const getScopeFromId = id => {
         "javascript": "source.js",
         "husk": "source.husk",
         "ruby": "source.ruby",
+        "python": "source.python",
     }[id] ?? "source.txt"
 }
 
@@ -81,7 +82,8 @@ const getPathToGrammarFile = scopeName => {
         "source.js": "./assets/syntaxes/js.tm.json",
         "source.txt": "./assets/syntaxes/plaintext.tm.json",
         "source.husk": "./assets/syntaxes/husk.json",
-        "source.ruby": "./assets/syntaxes/ruby.jsonc"
+        "source.ruby": "./assets/syntaxes/ruby.jsonc",
+        "source.python": "./assets/syntaxes/python.json"
     }
     const result = languages[scopeName]
     if(result) return result
@@ -109,12 +111,11 @@ async function liftOff() {
 
     // map of monaco "language id"s" to TextMate scopeNames
     const grammars = new Map()
-    grammars.set("css", "source.css")
-    grammars.set("html", "text.html.basic")
     grammars.set("typescript", "source.ts")
     grammars.set("javascript", "source.js")
     grammars.set("husk", "source.husk")
     grammars.set("ruby", "source.ruby")
+    grammars.set("python", "source.py")
 
     // monaco"s built-in themes aren"t powereful enough to handle TM tokens
     // https://github.com/Nishkalkashyap/monaco-vscode-textmate-theme-converter#monaco-vscode-textmate-theme-converter
@@ -125,7 +126,8 @@ async function liftOff() {
     await defineTheme("dp", "./assets/themes/dp.json"),
     await defineTheme("dpp", "./assets/themes/dpp.json")
 
-    const editor = monaco.editor.create(document.getElementById("container"), {
+    const container = document.getElementById("container")
+    const editor = monaco.editor.create(container, {
         value:
 `function a(x, y){
     const result = x + y + 2 * 3;
@@ -153,6 +155,21 @@ async function liftOff() {
     }
 
     editor.addAction(action)
+
+
+    // enables alt + scroll to change height of editor window
+    container.addEventListener("wheel", event => {
+        if(event.altKey){
+            
+            let current_height = parseInt("0" + getComputedStyle(container).height) // "0" + to prevent NaN
+            let new_height = current_height + event.deltaY / 2
+            if(new_height < event.clientY - container.getBoundingClientRect().top) return // cancel if new height makes the mouse not hover element
+            container.style.height = new_height.toString() + "px"
+            editor.layout()
+            event.stopPropagation() // stop editor to scroll normally
+        }
+    }, true) // true to capture event at "container" element
+
 }
 
 
