@@ -3,7 +3,7 @@ import * as monaco from "monaco-editor"
 import { loadWASM } from "onigasm" // peer dependency of "monaco-textmate"
 import { Registry } from "monaco-textmate" // peer dependency
 import { wireTmGrammars } from "monaco-editor-textmate"
-
+import { runCode } from "./coderunner.js"
 
 self.MonacoEnvironment = {
     getWorkerUrl: function (moduleId, label) {
@@ -138,7 +138,10 @@ async function liftOff() {
 }
 `,
         language: "javascript",
-        theme: "dpp"
+        theme: "dpp",
+        minimap: {
+            enabled: false
+        }
     })
     
     window.monaco = monaco
@@ -151,7 +154,9 @@ async function liftOff() {
         id: "runCode",
         keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
         label: "Run code",
-        run: runCode
+        run: () => {
+            runCode(editor.getValue(), "", [], editor.getModel().getLanguageId()).then(console.log)
+        }
     }
 
     editor.addAction(action)
@@ -163,12 +168,18 @@ async function liftOff() {
             
             let current_height = parseInt("0" + getComputedStyle(container).height) // "0" + to prevent NaN
             let new_height = current_height + event.deltaY / 2
-            if(new_height < event.clientY - container.getBoundingClientRect().top) return // cancel if new height makes the mouse not hover element
+            if(new_height <= 10 + event.clientY - container.getBoundingClientRect().top) return // cancel if new height makes the mouse not hover element
             container.style.height = new_height.toString() + "px"
             editor.layout()
             event.stopPropagation() // stop editor to scroll normally
         }
     }, true) // true to capture event at "container" element
+
+    // resize default way, with mouse drag
+    let observer = new ResizeObserver(() => {
+        editor.layout()
+    })
+    observer.observe(container)
 
 }
 
@@ -204,40 +215,6 @@ async function registerLanguages(monaco, editor){
     })
     
 }
-
-function runCode(editor){
-    let code = editor.getModel().getLinesContent().join("\n")
-    let language = editor.getModel().getLanguageId()
-
-    let stdin = "", argv = []
-
-    const language_id_to_piston_lang = id => id
-    
-    let url = "https://emkc.org/api/v2/piston/execute"
-    let data = {
-        "language": language_id_to_piston_lang(language),
-        "version": "*",
-        "files": [
-            {
-                "name": "code",
-                "content": code
-            }
-        ],
-        "stdin": stdin,
-        "args": argv,
-        "compile_timeout": 10000,
-        "run_timeout": 5000,
-        "compile_memory_limit": -1,
-        "run_memory_limit": -1
-    }
-    fetch(url, {
-        method: "POST",
-        body: JSON.stringify(data)
-    }).then(res => res.json()).then(console.log)
-}
-
-
-
 
 
 liftOff()
