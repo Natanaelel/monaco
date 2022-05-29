@@ -22,5 +22,9 @@ export function runCode(code, stdin = "", argv = [], language){
     return fetch(url, {
         method: "POST",
         body: JSON.stringify(data)
-    }).then(res => res.json())
+    })  .then(res => res.json())
+        .then(json => {
+            document.querySelector("#output").innerText = json.run.stdout || json.run.stderr
+            return json
+        })
 }

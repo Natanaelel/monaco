@@ -10,17 +10,22 @@ body {
     background-color: #333;
     /* background-color: #1e1e1e; */
     /* overflow: hidden; */
-    position: fixed;
+    /* position: fixed; */
     /* overflow-anchor: 100%; */
 }
 #middle {
     margin-left: 25px;
     margin-right: 25px;
-    margin-top: 150px;
+    /* margin-top: 150px; */
+    margin-top: 25px;
 }
 .box{
     height: 100px;
     margin-top: 20px;
     margin-bottom: 20px;
     background-color: #1e1e1e;
+    color: #ccc;
+    font-family: "Consolas", 'Courier New', Courier, monospace;
+    font-size: 14px;
+    padding: 5px;
 }

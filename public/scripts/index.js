@@ -129,13 +129,14 @@ async function liftOff() {
     const container = document.getElementById("container")
     const editor = monaco.editor.create(container, {
         value:
-`function a(x, y){
+`function f(x, y){
     const result = x + y + 2 * 3;
     let fun = id => id <= id
     if(result == null) return
     console.log(\`let a = \${x + y + 3 == 4 ? 5 : 6}\`)
     return result
 }
+f(1, 2)
 `,
         language: "javascript",
         theme: "dpp",
@@ -163,18 +164,30 @@ async function liftOff() {
 
 
     // enables alt + scroll to change height of editor window
-    container.addEventListener("wheel", event => {
-        if(event.altKey){
-            
-            let current_height = parseInt("0" + getComputedStyle(container).height) // "0" + to prevent NaN
-            let new_height = current_height + event.deltaY / 2
-            if(new_height <= 10 + event.clientY - container.getBoundingClientRect().top) return // cancel if new height makes the mouse not hover element
-            container.style.height = new_height.toString() + "px"
-            editor.layout()
-            event.stopPropagation() // stop editor to scroll normally
-        }
-    }, true) // true to capture event at "container" element
 
+    const addScrollResize = (element, settings = {}) => {
+        element.addEventListener("wheel", event => {
+            if(event.altKey){
+                let current_height = parseInt("0" + getComputedStyle(element).height) // "0" + to prevent NaN
+                let new_height = current_height + event.deltaY / 2
+                if(new_height <= 10 + event.clientY - element.getBoundingClientRect().top) return // cancel if new height makes the mouse not hover element
+                if(new_height < (settings?.minHeight ?? 10)) return
+                element.style.height = new_height.toString() + "px"
+                settings?.run?.()
+                event.stopPropagation() // stop editor to scroll normally
+            }
+        }, true) // true to capture event at "container" element
+    }
+    addScrollResize(container, {
+        run: () => editor.layout(),
+        minHeight: 20
+    })
+    addScrollResize(document.querySelector("#input"),{
+        minHeight: 20
+    })
+    addScrollResize(document.querySelector("#output"),{
+        minHeight: 20
+    })
     // resize default way, with mouse drag
     let observer = new ResizeObserver(() => {
         editor.layout()
