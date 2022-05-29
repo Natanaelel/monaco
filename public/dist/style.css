@@ -2,8 +2,8 @@
     /* width: 50%; */
     /* min-height: 500px; */
     height: 400px;
-    resize: vertical;
-    overflow: hidden;
+    /* resize: vertical; */
+    /* overflow: hidden; */
 }
 body {
     margin: 0px;
