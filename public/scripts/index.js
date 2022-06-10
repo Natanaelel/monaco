@@ -209,13 +209,16 @@ f(1, 2)
 
     languages = await fetch("./assets/languages.json").then(x => x.json());
     
-    if(document.location.hash.length > 1){
-        
-        let hash = document.location.hash.slice(1)
-        if(languages.available.includes(hash))
-            changeLanguageTo(hash)
-    }
 
+    window.onhashchange = () => {
+        if(document.location.hash.length > 1){
+            let hash = document.location.hash.slice(1)
+            if(languages.available.includes(hash))
+                changeLanguageTo(hash)
+        }
+    }
+    window.onhashchange()
+    editor.focus()
 }
 async function runCodeWrapper(...args){
     let el = document.getElementById("runicon")
