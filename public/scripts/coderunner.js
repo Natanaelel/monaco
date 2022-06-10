@@ -3,6 +3,7 @@ export function runCode(code, stdin = "", argv = [], language){
     const language_id_to_piston_lang = id => id
     
     let url = "https://emkc.org/api/v2/piston/execute"
+    url = "http://127.0.0.1:443/execute" // testapi
     let data = {
         "language": language_id_to_piston_lang(language),
         "version": "*",

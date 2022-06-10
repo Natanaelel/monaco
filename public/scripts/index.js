@@ -12,6 +12,9 @@ self.MonacoEnvironment = {
     }
 }
 
+
+let languages
+
 var registeredLanguages = new Set()
 
 async function changeLanguageTo(languageId){
@@ -156,7 +159,7 @@ f(1, 2)
         keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
         label: "Run code",
         run: () => {
-            runCode(editor.getValue(), "", [], editor.getModel().getLanguageId()).then(console.log)
+            runCodeWrapper(editor.getValue(), "", [], editor.getModel().getLanguageId()).then(console.log)
         }
     }
 
@@ -194,8 +197,37 @@ f(1, 2)
     })
     observer.observe(container)
 
-}
 
+    document.getElementById("run").onclick = runCodeWrapper
+
+    container.onkeydown = container.onkeyup = () => {
+        let el = document.getElementById("codestats")
+        el.innerText = editor.getValue().length
+    }
+
+
+
+    languages = await fetch("./assets/languages.json").then(x => x.json());
+    
+    if(document.location.hash.length > 1){
+        
+        let hash = document.location.hash.slice(1)
+        if(languages.available.includes(hash))
+            changeLanguageTo(hash)
+    }
+
+}
+async function runCodeWrapper(...args){
+    let el = document.getElementById("runicon")
+    let i = 0
+    let interval = setInterval(() => {
+        i = (i + 1) % 4
+        el.innerText = "◜◝◞◟"[i] // ◥◤◣◢
+    }, 100)
+    await runCode(...args)
+    clearInterval(interval)
+    el.innerText = "▶"
+}
 
 async function registerLanguages(monaco, editor){
     monaco.languages.register({
